@@ -5,10 +5,14 @@ import useThemeMusic from '../../hooks/useThemeMusic'
 import { useSettings } from '../../hooks/useSettings'
 import { getCache } from '../../cache/musicCache'
 import useAudioPlayer from '../../hooks/useAudioPlayer'
+import { adoptHoverPlayback } from '../../lib/hoverPlayer'
 
 export default function ThemePlayer(): ReactElement {
   const { settings, isLoading: settingsIsLoading } = useSettings()
   const { appid } = useParams<{ appid: string }>()
+  // If this game's song is already playing from the library highlight,
+  // let it continue instead of starting it again from the beginning.
+  const [continuesHover] = useState(() => adoptHoverPlayback(parseInt(appid)))
   const { audio } = useThemeMusic(parseInt(appid))
   const audioPlayer = useAudioPlayer(audio.audioUrl)
   // Per-game page delay override (seconds), loaded from the cache.
@@ -32,6 +36,7 @@ export default function ThemePlayer(): ReactElement {
   }, [settingsIsLoading])
 
   useEffect(() => {
+    if (continuesHover) return undefined
     if (audio?.audioUrl?.length && audioPlayer.isReady) {
       // Start just after Steam's page-opening animation instead of during it.
       const delay = Math.min(

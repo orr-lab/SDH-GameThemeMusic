@@ -6,7 +6,7 @@
 
 Modified from [ChrisMack32/SDH-GameThemeMusic](https://github.com/ChrisMack32/SDH-GameThemeMusic) v1.7.1 (itself a fork of [OMGDuke/SDH-GameThemeMusic](https://github.com/OMGDuke/SDH-GameThemeMusic)). Changes, 2026-09-27:
 
-- **Play on highlight** (off by default): highlight a game tile in the library, a library tab or a Home screen shelf for a moment and its theme fades in; moving away fades it out. Scrolling through your library becomes a lot more fun, especially with the Highlight Delay set low. Only songs already downloaded to the Deck are used, so it never touches the network. It stops on game pages and while a game is running.
+- **Play on highlight** (off by default): highlight a game tile in the library, a library tab or a Home screen shelf for a moment and its theme fades in; moving away fades it out. Scrolling through your library becomes a lot more fun, especially with the Highlight Delay set low. Opening a game whose song is playing keeps the song going instead of restarting it. Only songs already downloaded to the Deck are used, so it never touches the network. It stops on game pages and while a game is running.
 - **Per-game volume up to 200%** for quiet songs (applies to downloaded songs; streamed songs are capped at 100%).
 - **Delays**: a Highlight Delay (0–5 s) and a Game Page Delay (0–1 s, so music starts after Steam's page animation), both adjustable globally and per game in the game's Game Settings tab.
 - **yt-dlp fixes**: bundled yt-dlp updated to 2026.08.19 (the older one gets HTTP 403 from YouTube); yt-dlp's default YouTube clients are used; failures are checked and logged instead of being shown as "Selected"; video IDs starting with "-" work; the automatic search stops once a playable song is found.

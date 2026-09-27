@@ -49,6 +49,28 @@ function isHoverRoute(route: string | undefined): boolean {
   return route.startsWith('/library') && !route.startsWith('/library/app/')
 }
 
+function gamePageAppId(route: string | undefined): number | undefined {
+  const match = route?.match(/^\/library\/app\/(\d+)/)
+  return match ? Number(match[1]) : undefined
+}
+
+// The running hover player, so the game page can take over its song.
+let instance: HoverPlayer | undefined
+
+/**
+ * Called by the game page's player. If the highlight song for this game is
+ * already playing, the hover player keeps it going and the page must not
+ * start its own copy. Returns true in that case.
+ */
+export function adoptHoverPlayback(appId: number): boolean {
+  try {
+    return instance?.adopt(appId) ?? false
+  } catch (e) {
+    log('adopt failed', e)
+    return false
+  }
+}
+
 function appIdFromElement(el: Element): number | undefined {
   const fiberKey = Object.keys(el).find((k) => k.startsWith('__reactFiber$'))
   let fiber = fiberKey ? (el as any)[fiberKey] : undefined
@@ -86,6 +108,8 @@ export class HoverPlayer {
   }
 
   start() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    instance = this
     settingsEvents.addEventListener('change', this.onSettingsChange)
     this.state.eventBus.addEventListener('stateUpdate', this.onStateUpdate)
     loadSettings()
@@ -98,6 +122,7 @@ export class HoverPlayer {
 
   destroy() {
     this.destroyed = true
+    if (instance === this) instance = undefined
     clearTimeout(this.attachRetry)
     settingsEvents.removeEventListener('change', this.onSettingsChange)
     this.state.eventBus.removeEventListener('stateUpdate', this.onStateUpdate)
@@ -155,19 +180,45 @@ export class HoverPlayer {
     }
   }
 
+  adopt(appId: number): boolean {
+    return !this.destroyed && this.playingAppId === appId
+  }
+
   private onRouteChange = () => {
-    if (!isHoverRoute(getRoute())) this.stop()
+    const route = getRoute()
+    // Opening the page of the game whose song is playing: keep it going.
+    if (
+      this.playingAppId !== undefined &&
+      gamePageAppId(route) === this.playingAppId
+    ) {
+      return
+    }
+    if (!isHoverRoute(route)) this.stop()
   }
 
   private onFocusIn = (e: FocusEvent) => {
     try {
-      // Every focus change resets the timer and fades out what's playing.
+      const target = e.target as Element | null
+      // Moving around the page of the game whose song is playing.
+      if (
+        this.playingAppId !== undefined &&
+        gamePageAppId(getRoute()) === this.playingAppId
+      ) {
+        return
+      }
+      const appId = target ? appIdFromElement(target) : undefined
+      // Back on (or still on) the tile of the game that's playing: keep going.
+      if (
+        appId !== undefined &&
+        appId === this.playingAppId &&
+        isHoverRoute(getRoute())
+      ) {
+        return
+      }
+      // Every other focus change resets the timer and fades out what's playing.
       this.stop()
       if (!this.settings.playOnHighlight) return
-      const target = e.target as Element | null
-      if (!target) return
-      const appId = appIdFromElement(target)
-      if (!appId) return
+      if (!target || !appId) return
       const generation = this.generation
       const focusedAt = performance.now()
       getCache(appId)
