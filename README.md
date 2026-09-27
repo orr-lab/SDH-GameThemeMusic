@@ -4,14 +4,27 @@
 
 ## Changes in this fork (orr-lab, September 2026)
 
-Modified from [ChrisMack32/SDH-GameThemeMusic](https://github.com/ChrisMack32/SDH-GameThemeMusic) v1.7.1 (itself a fork of [OMGDuke/SDH-GameThemeMusic](https://github.com/OMGDuke/SDH-GameThemeMusic)). Changes, 2026-09-27:
+Modified from [ChrisMack32/SDH-GameThemeMusic](https://github.com/ChrisMack32/SDH-GameThemeMusic) v1.7.1 (itself a fork of [OMGDuke/SDH-GameThemeMusic](https://github.com/OMGDuke/SDH-GameThemeMusic)), 2026-09-27 to 2026-09-28. All changes:
 
-- **Play on highlight** (off by default): highlight a game tile in the library, a library tab or a Home screen shelf for a moment and its theme fades in; moving away fades it out. Scrolling through your library becomes a lot more fun, especially with the Highlight Delay set low. Opening a game whose song is playing keeps the song going instead of restarting it. Only songs already downloaded to the Deck are used, so it never touches the network. It stops on game pages and while a game is running.
-- **Per-game volume up to 200%** for quiet songs (applies to downloaded songs; streamed songs are capped at 100%).
+### New features
+- **Play on highlight** (off by default): highlight a game tile in the library, a library tab or a Home screen row for a moment and its theme fades in; moving away fades it out. Scrolling through your library becomes a lot more fun, especially with the Highlight Delay set low. Only songs already downloaded to the device are used, so it never goes online. It's silent while a game is running.
+- **Opening a game keeps its song playing**: if a game's song is playing from the highlight, opening its page continues it instead of restarting it, and pressing B keeps it going too.
 - **Delays**: a Highlight Delay (0–5 s) and a Game Page Delay (0–1 s, so music starts after Steam's page animation), both adjustable globally and per game in the game's Game Settings tab.
-- **yt-dlp fixes**: bundled yt-dlp updated to 2026.08.19 (the older one gets HTTP 403 from YouTube); yt-dlp's default YouTube clients are used; failures are checked and logged instead of being shown as "Selected"; video IDs starting with "-" work; the automatic search stops once a playable song is found.
+- **Per-game volume up to 200%** for quiet songs (applies to downloaded songs; streamed songs are capped at 100%).
+
+### Changes
 - **Use yt-dlp and Download Music are on by default** for new installs (existing settings are kept).
+
+### Fixes
+- **yt-dlp**: bundled yt-dlp updated to 2026.08.19 (the older one gets HTTP 403 from YouTube), and yt-dlp's default YouTube clients are used instead of `tv_simply`.
+- **Download errors**: yt-dlp failures are checked and logged, and show "Download failed" instead of "Selected".
+- **Video IDs starting with "-"** no longer break yt-dlp.
+- **Search**: the automatic search stops once a playable song is found, instead of resolving all 10 results in the background.
 - **Songs keep playing on later visits**: if a saved song can't be loaded, a fresh search result plays instead, and streamed songs are downloaded in the background (when Download Music is on).
+- **"No Music"** no longer shows "Could not download this music".
+- **Sleep and wake**: music stops when the device goes to sleep or shuts down, and after waking it restarts from the beginning once Steam's startup movie has finished.
+
+### For developers
 - `scripts/package_zip.py` builds an installable zip without Docker or the Decky CLI. The zip's top-level folder must stay `Game Theme Music`, because Decky names the plugin's data folder (where downloads live) after it.
 
 ## Installing this version
