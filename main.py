@@ -192,6 +192,9 @@ class Plugin:
         return entry.get("url")
 
     async def download_yt_audio(self, id: str) -> bool:
+        if not isinstance(id, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", id):
+            decky.logger.error(f"download_yt_audio: invalid video ID {id!r}")
+            return False
         if self.local_match(id) is not None:
             # Already downloaded—there's nothing we need to do.
             return True

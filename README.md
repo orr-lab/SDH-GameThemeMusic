@@ -20,7 +20,7 @@ You need [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader) on yo
 1. **Turn on Decky's developer mode** (one time only): press the **…** button, open the **plug icon** (Decky), press the **gear icon**, and turn on **Developer mode**.
 2. **Install from URL**: in the same Decky settings, open **Developer**, choose **Install Plugin from URL**, and enter:
    ```
-   https://github.com/orr-lab/SDH-GameThemeMusic/releases/download/v1.8.0/Game-Theme-Music-1.8.0.zip
+   https://github.com/orr-lab/SDH-GameThemeMusic/releases/latest/download/Game-Theme-Music.zip
    ```
    Press **Install** and confirm.
    You can also download the zip from the [Releases page](https://github.com/orr-lab/SDH-GameThemeMusic/releases), copy it to the Deck, and use **Install Plugin from ZIP File** instead.

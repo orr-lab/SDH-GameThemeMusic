@@ -54,7 +54,8 @@ export default function ChangePage({
     videoId: string
     audioUrl: string
   }) {
-    if (settings.downloadAudio) {
+    // "No Music" has an empty videoId, so there's nothing to download.
+    if (settings.downloadAudio && audio.videoId.length) {
       const success = await getResolver(settings.useYtDlp).downloadAudio({
         id: audio.videoId,
         url: audio.audioUrl
