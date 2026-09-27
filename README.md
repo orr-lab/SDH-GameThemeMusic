@@ -13,6 +13,25 @@ Modified from [ChrisMack32/SDH-GameThemeMusic](https://github.com/ChrisMack32/SD
 - **Songs keep playing on later visits**: if a saved song can't be loaded, a fresh search result plays instead, and streamed songs are downloaded in the background (when Download Music is on).
 - `scripts/package_zip.py` builds an installable zip without Docker or the Decky CLI. The zip's top-level folder must stay `Game Theme Music`, because Decky names the plugin's data folder (where downloads live) after it.
 
+## Installing this version
+
+You need [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader) on your Steam Deck. The Decky store still has the older version, so install this one manually. Everything below is done on the Deck in Game Mode.
+
+1. **Turn on Decky's developer mode** (one time only): press the **…** button, open the **plug icon** (Decky), press the **gear icon**, and turn on **Developer mode**.
+2. **Install from URL**: in the same Decky settings, open **Developer**, choose **Install Plugin from URL**, and enter:
+   ```
+   https://github.com/orr-lab/SDH-GameThemeMusic/releases/download/v1.8.0/Game-Theme-Music-1.8.0.zip
+   ```
+   Press **Install** and confirm.
+   You can also download the zip from the [Releases page](https://github.com/orr-lab/SDH-GameThemeMusic/releases), copy it to the Deck, and use **Install Plugin from ZIP File** instead.
+3. **Set it up**: open **Game Theme Music** in the Decky menu.
+   - Turn on **Use yt-dlp** and **Download Music**.
+   - Turn on **Play on Highlight** if you want music while scrolling your library.
+
+If you already use Game Theme Music from the store, this replaces it. Your downloaded songs, song choices and settings carry over. To go back, uninstall it in Decky's settings (**Plugins** tab) and install Game Theme Music from the store again.
+
+Play on highlight only plays songs that are already downloaded. Open a game's page once, with Download Music on, and its song is saved for next time.
+
 [![Crowdin](https://badges.crowdin.net/sdh-gamethememusic/localized.svg)](https://crowdin.com/project/sdh-gamethememusic) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://deckbrew.xyz/discord)
 
 Play theme songs on your game pages. Compatible with the [AudioLoader](https://github.com/EMERALD0874/SDH-AudioLoader) plugin (AudioLoader version >= 1.5.0).
@@ -29,7 +48,7 @@ The song that plays can be customised via the games context menu.
 
 ## Decky Loader
 
-This plugin requires [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader). Game Theme Music is available on the store.
+This plugin requires [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader). Game Theme Music is available on the store (the older version; see "Installing this version" above for this one).
 
 ## Steam Deck Homebrew Discord
 
