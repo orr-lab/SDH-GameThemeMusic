@@ -20,6 +20,8 @@ import { useSettings } from '../../hooks/useSettings'
 import useTranslations from '../../hooks/useTranslations'
 import {
   FaDownload,
+  FaHandPointer,
+  FaHourglassHalf,
   FaUndo,
   FaSave,
   FaVolumeMute,
@@ -47,7 +49,10 @@ export default function Index() {
     setUseYtDlp,
     setDownloadAudio,
     setInvidiousInstance,
-    setVolume
+    setVolume,
+    setPlayOnHighlight,
+    setHighlightDelay,
+    setPageDelay
   } = useSettings()
 
   const t = useTranslations()
@@ -187,6 +192,21 @@ export default function Index() {
           />
         </PanelSectionRow>
         <PanelSectionRow>
+          <SliderField
+            label={t('pageDelay')}
+            description={t('pageDelayDescription')}
+            value={settings.pageDelay}
+            onChange={(newVal: number) => {
+              setPageDelay(Math.round(newVal * 10) / 10)
+            }}
+            min={0}
+            max={1}
+            step={0.1}
+            icon={<FaHourglassHalf />}
+            showValue
+          />
+        </PanelSectionRow>
+        <PanelSectionRow>
           <ToggleField
             icon={<FaVolumeMute />}
             checked={settings.defaultMuted}
@@ -197,6 +217,38 @@ export default function Index() {
             }}
           />
         </PanelSectionRow>
+        <PanelSectionRow>
+          <ToggleField
+            icon={<FaHandPointer />}
+            checked={settings.playOnHighlight}
+            label={t('playOnHighlight')}
+            description={t('playOnHighlightDescription')}
+            onChange={(newVal: boolean) => {
+              setPlayOnHighlight(newVal)
+            }}
+          />
+        </PanelSectionRow>
+        {settings.playOnHighlight && (
+          <PanelSectionRow>
+            <SliderField
+              label={t('highlightDelay')}
+              description={
+                settings.highlightDelay === 0
+                  ? t('highlightDelayZeroWarning')
+                  : t('highlightDelayDescription')
+              }
+              value={settings.highlightDelay}
+              onChange={(newVal: number) => {
+                setHighlightDelay(newVal)
+              }}
+              min={0}
+              max={5}
+              step={0.25}
+              icon={<FaHourglassHalf />}
+              showValue
+            />
+          </PanelSectionRow>
+        )}
         <PanelSectionRow>
           <ToggleField
             icon={<FaYoutube />}

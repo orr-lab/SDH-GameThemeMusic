@@ -17,8 +17,10 @@ function useTranslations() {
   ): string {
     let result
     //
-    if (languages[lang]?.[key]?.length) {
-      result = languages[lang]?.[key]
+    // Other languages may not have every key yet; fall back to English.
+    const dict = languages[lang] as Partial<(typeof languages)['en']>
+    if (dict?.[key]?.length) {
+      result = dict[key] as string
     } else if (languages.en?.[key]?.length) {
       result = languages.en?.[key]
     } else {

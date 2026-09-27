@@ -2,6 +2,17 @@
 
 # Not really Maintained.. but I wanted it to work again so here it is
 
+## Changes in this fork (orr-lab, September 2026)
+
+Modified from [ChrisMack32/SDH-GameThemeMusic](https://github.com/ChrisMack32/SDH-GameThemeMusic) v1.7.1 (itself a fork of [OMGDuke/SDH-GameThemeMusic](https://github.com/OMGDuke/SDH-GameThemeMusic)). Changes, 2026-09-27:
+
+- **Play on highlight** (off by default): highlight a game tile in the library, a library tab or a Home screen shelf for a moment and its theme fades in; moving away fades it out. Scrolling through your library becomes a lot more fun, especially with the Highlight Delay set low. Only songs already downloaded to the Deck are used, so it never touches the network. It stops on game pages and while a game is running.
+- **Per-game volume up to 200%** for quiet songs (applies to downloaded songs; streamed songs are capped at 100%).
+- **Delays**: a Highlight Delay (0–5 s) and a Game Page Delay (0–1 s, so music starts after Steam's page animation), both adjustable globally and per game in the game's Game Settings tab.
+- **yt-dlp fixes**: bundled yt-dlp updated to 2026.08.19 (the older one gets HTTP 403 from YouTube); yt-dlp's default YouTube clients are used; failures are checked and logged instead of being shown as "Selected"; video IDs starting with "-" work; the automatic search stops once a playable song is found.
+- **Songs keep playing on later visits**: if a saved song can't be loaded, a fresh search result plays instead, and streamed songs are downloaded in the background (when Download Music is on).
+- `scripts/package_zip.py` builds an installable zip without Docker or the Decky CLI. The zip's top-level folder must stay `Game Theme Music`, because Decky names the plugin's data folder (where downloads live) after it.
+
 [![Crowdin](https://badges.crowdin.net/sdh-gamethememusic/localized.svg)](https://crowdin.com/project/sdh-gamethememusic) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://deckbrew.xyz/discord)
 
 Play theme songs on your game pages. Compatible with the [AudioLoader](https://github.com/EMERALD0874/SDH-AudioLoader) plugin (AudioLoader version >= 1.5.0).

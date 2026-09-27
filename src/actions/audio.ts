@@ -16,17 +16,25 @@ abstract class AudioResolver {
   ): Promise<string | undefined>
   abstract downloadAudio(video: YouTubeVideo): Promise<boolean>
 
+  // Stops the search started by the most recent getYouTubeSearchResults call.
+  async stopSearch(): Promise<void> {}
+
   async getAudio(
     appName: string
   ): Promise<{ videoId: string; audioUrl: string } | undefined> {
     const videos = this.getYouTubeSearchResults(appName + ' Theme Music')
-    for await (const video of videos) {
-      const audioUrl = await this.getAudioUrlFromVideo(video)
-      if (audioUrl?.length) {
-        return { audioUrl, videoId: video.id }
+    try {
+      for await (const video of videos) {
+        const audioUrl = await this.getAudioUrlFromVideo(video)
+        if (audioUrl?.length) {
+          return { audioUrl, videoId: video.id }
+        }
       }
+      return undefined
+    } finally {
+      // We only need one playable result; don't keep resolving the rest.
+      await this.stopSearch()
     }
-    return undefined
   }
 }
 
@@ -111,11 +119,22 @@ class InvidiousAudioResolver extends AudioResolver {
 }
 
 class YtDlpAudioResolver extends AudioResolver {
+  private searchId: number | undefined
+
+  async stopSearch(): Promise<void> {
+    if (this.searchId === undefined) return
+    try {
+      await call<[number]>('stop_search', this.searchId)
+    } catch (err) {
+      console.error('GTM: stop_search failed', err)
+    }
+  }
+
   async *getYouTubeSearchResults(
     searchTerm: string
   ): AsyncIterable<YouTubeVideoPreview> {
     try {
-      await call<[string]>('search_yt', searchTerm)
+      this.searchId = await call<[string], number>('search_yt', searchTerm)
       let result = await call<[], YouTubeVideoPreview | null>('next_yt_result')
       while (result) {
         yield result
@@ -144,8 +163,10 @@ class YtDlpAudioResolver extends AudioResolver {
 
   async downloadAudio(video: YouTubeVideo): Promise<boolean> {
     try {
-      await call<[string]>('download_yt_audio', video.id)
-      return true
+      const ok = await call<[string], boolean>('download_yt_audio', video.id)
+      if (!ok)
+        console.error(`GTM: download of ${video.id} failed, see plugin log`)
+      return ok === true
     } catch (e) {
       console.error(e)
       return false

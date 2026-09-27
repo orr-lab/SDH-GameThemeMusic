@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAudioLoaderCompatState } from '../state/AudioLoaderCompatState'
+import { setBoostedVolume } from '../lib/audioBoost'
 
 const useAudioPlayer = (
   audioUrl: string | undefined
@@ -30,11 +31,17 @@ const useAudioPlayer = (
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [isReady, setIsReady] = useState(false)
+  // The volume may be set before the song is known; boosting above 100%
+  // depends on the song, so remember it and re-apply when the song changes.
+  const wantedVolume = useRef<number | undefined>()
 
   useEffect(() => {
     if (audioUrl?.length) {
       audioPlayer.src = audioUrl
       audioPlayer.loop = true
+      if (wantedVolume.current !== undefined) {
+        setBoostedVolume(audioPlayer, wantedVolume.current)
+      }
     }
   }, [audioUrl])
 
@@ -73,7 +80,8 @@ const useAudioPlayer = (
   }
 
   function setVolume(newVolume: number) {
-    audioPlayer.volume = newVolume
+    wantedVolume.current = newVolume
+    setBoostedVolume(audioPlayer, newVolume)
   }
 
   function unload() {

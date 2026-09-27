@@ -10,6 +10,9 @@ localforage.config({
 type GameThemeMusicCache = {
   videoId?: string | undefined
   volume?: number
+  // Per-game overrides of the global delays, in seconds.
+  pageDelay?: number
+  highlightDelay?: number
 }
 
 type GameThemeMusicCacheMapping = { [key: string]: GameThemeMusicCache }

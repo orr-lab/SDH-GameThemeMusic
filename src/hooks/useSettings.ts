@@ -7,14 +7,34 @@ export type Settings = {
   downloadAudio: boolean
   invidiousInstance: string
   volume: number
+  playOnHighlight: boolean
+  highlightDelay: number
+  pageDelay: number
 }
 
-export const defaultSettings = {
+export const defaultSettings: Settings = {
   defaultMuted: false,
   useYtDlp: false,
   downloadAudio: false,
   invidiousInstance: 'https://inv.tux.pizza',
-  volume: 1
+  volume: 1,
+  playOnHighlight: false,
+  highlightDelay: 2.5,
+  pageDelay: 0.3
+}
+
+// Fires a 'change' CustomEvent<Settings> whenever settings are saved, so
+// non-React code (the hover player) can stay in sync.
+export const settingsEvents = new EventTarget()
+
+export async function loadSettings(): Promise<Settings> {
+  const saved = await call<[string, Settings], Settings>(
+    'get_setting',
+    'settings',
+    defaultSettings
+  )
+  // Older saved settings don't have the newer keys, so fill them in.
+  return { ...defaultSettings, ...saved }
 }
 
 export const useSettings = () => {
@@ -25,11 +45,7 @@ export const useSettings = () => {
   useEffect(() => {
     const getData = async () => {
       setIsLoading(true)
-      const savedSettings = await call<[string, Settings], Settings>(
-        'get_setting',
-        'settings',
-        settings
-      )
+      const savedSettings = await loadSettings()
       setSettings(savedSettings)
       setIsLoading(false)
     }
@@ -47,6 +63,9 @@ export const useSettings = () => {
         'settings',
         newSettings
       ).catch(console.error)
+      settingsEvents.dispatchEvent(
+        new CustomEvent('change', { detail: newSettings })
+      )
       return newSettings
     })
   }
@@ -68,6 +87,15 @@ export const useSettings = () => {
   function setVolume(value: Settings['volume']) {
     updateSettings('volume', value)
   }
+  function setPlayOnHighlight(value: Settings['playOnHighlight']) {
+    updateSettings('playOnHighlight', value)
+  }
+  function setHighlightDelay(value: Settings['highlightDelay']) {
+    updateSettings('highlightDelay', value)
+  }
+  function setPageDelay(value: Settings['pageDelay']) {
+    updateSettings('pageDelay', value)
+  }
 
   return {
     settings,
@@ -76,6 +104,9 @@ export const useSettings = () => {
     setDownloadAudio,
     setInvidiousInstance,
     setVolume,
+    setPlayOnHighlight,
+    setHighlightDelay,
+    setPageDelay,
     isLoading
   }
 }

@@ -20,6 +20,7 @@ export class AudioLoaderCompatState {
   private gamesRunning: number[] = []
   private onThemePage: boolean = false
   private lastOnThemePageTime: number = 0
+  private hoverPlaying: boolean = false
 
   // You can listen to this eventBus' 'stateUpdate' event and use that to trigger a useState or other function that causes a re-render
   public eventBus = new EventTarget()
@@ -68,6 +69,13 @@ export class AudioLoaderCompatState {
     )
   }
 
+  // Play-on-highlight uses its own flag so it never overrides the game page's state.
+  setHoverPlaying(hoverPlaying: boolean) {
+    if (this.hoverPlaying === hoverPlaying) return
+    this.hoverPlaying = hoverPlaying
+    this.forceUpdate()
+  }
+
   private setAudioLoaderEnabled(enabled: boolean) {
     const audioLoader = (window as any).AUDIOLOADER_MENUMUSIC
     if (audioLoader) {
@@ -86,7 +94,7 @@ export class AudioLoaderCompatState {
   }
 
   private forceUpdate() {
-    if (this.onThemePage) {
+    if (this.onThemePage || this.hoverPlaying) {
       this.setAudioLoaderEnabled(false)
     } else {
       this.setAudioLoaderEnabled(this.gamesRunning.length === 0)
