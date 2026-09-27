@@ -26,6 +26,11 @@ function attachGain(audio: HTMLAudioElement): GainNode | undefined {
   }
 }
 
+/** Web Audio can be left suspended after the device sleeps; wake it up. */
+export function resumeAudioContext() {
+  context?.resume().catch(() => undefined)
+}
+
 /**
  * Applies `volume` (0 to MAX_VOLUME) to `audio` and returns the element-level
  * volume (0 to 1) that was set, which callers can fade to.

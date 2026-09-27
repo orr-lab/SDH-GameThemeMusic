@@ -2,7 +2,8 @@
 import { call } from '@decky/api'
 
 import { getCache } from '../cache/musicCache'
-import { setBoostedVolume } from './audioBoost'
+import { resumeAudioContext, setBoostedVolume } from './audioBoost'
+import { WAKE_FADE_MS, afterStartupMovie, onPowerEvents } from './powerEvents'
 import { AudioLoaderCompatState } from '../state/AudioLoaderCompatState'
 import {
   Settings,
@@ -29,6 +30,9 @@ const FADE_STEP_MS = 20
 const MAX_FIBER_DEPTH = 12
 // Recently played songs kept in memory (each can be ~10 MB), freed when a game starts.
 const DATA_URL_CACHE_SIZE = 3
+// After returning from a game's page, Steam sometimes highlights a tab for a
+// moment before settling back on the game; ignore non-game highlights briefly.
+const RETURN_GRACE_MS = 800
 
 const log = (...args: unknown[]) => console.log('GTM:', ...args)
 
@@ -101,6 +105,14 @@ export class HoverPlayer {
   private playingAppId: number | undefined
   private dataUrls = new Map<string, string>()
   private destroyed = false
+  private unregisterPower: (() => void) | undefined
+  private pausedForSleep = false
+  private lastRoute: string | undefined
+  private returnGraceUntil = 0
+  private graceTimer: ReturnType<typeof setTimeout> | undefined
+  // The element volume the current song fades to (0 to 1).
+  private targetVolume = 1
+  private cancelWake: (() => void) | undefined
 
   constructor(private state: AudioLoaderCompatState) {
     this.audio.loop = true
@@ -112,6 +124,10 @@ export class HoverPlayer {
     instance = this
     settingsEvents.addEventListener('change', this.onSettingsChange)
     this.state.eventBus.addEventListener('stateUpdate', this.onStateUpdate)
+    this.unregisterPower = onPowerEvents({
+      onSleep: this.onSleep,
+      onWake: this.onWake
+    })
     loadSettings()
       .then((s) => {
         this.settings = s
@@ -124,6 +140,8 @@ export class HoverPlayer {
     this.destroyed = true
     if (instance === this) instance = undefined
     clearTimeout(this.attachRetry)
+    this.cancelWake?.()
+    this.unregisterPower?.()
     settingsEvents.removeEventListener('change', this.onSettingsChange)
     this.state.eventBus.removeEventListener('stateUpdate', this.onStateUpdate)
     try {
@@ -186,6 +204,8 @@ export class HoverPlayer {
 
   private onRouteChange = () => {
     const route = getRoute()
+    const previous = this.lastRoute
+    this.lastRoute = route
     // Opening the page of the game whose song is playing: keep it going.
     if (
       this.playingAppId !== undefined &&
@@ -193,7 +213,77 @@ export class HoverPlayer {
     ) {
       return
     }
-    if (!isHoverRoute(route)) this.stop()
+    if (!isHoverRoute(route)) {
+      this.stop()
+      return
+    }
+    // Back in the library from the page of the game that's playing.
+    if (
+      this.playingAppId !== undefined &&
+      gamePageAppId(previous) === this.playingAppId
+    ) {
+      this.returnGraceUntil = performance.now() + RETURN_GRACE_MS
+    }
+  }
+
+  // End of the grace period: if the highlight didn't settle back on the
+  // playing game, treat it like any other highlight move.
+  private settleAfterReturn = () => {
+    const el = this.doc?.activeElement ?? null
+    if (el && appIdFromElement(el) === this.playingAppId) return
+    this.onFocusIn({ target: el } as unknown as FocusEvent)
+  }
+
+  // Going to sleep or shutting down: pause the song (in the library the
+  // highlight moving to Steam's sleep screen has usually stopped it already,
+  // but a song continued onto its game page ignores focus changes) and
+  // resume the same song after waking, so everything carries on as before.
+  private onSleep = () => {
+    this.cancelWake?.()
+    this.generation++
+    clearTimeout(this.delayTimer)
+    clearInterval(this.fadeTimer)
+    if (this.playingAppId === undefined) {
+      // In the library the highlight moving to the sleep screen has just
+      // started a fade-out; cancelling the fade above would leave the song
+      // playing through the sleep animation, so silence it now.
+      this.pauseAudio()
+      return
+    }
+    this.pausedForSleep = true
+    try {
+      this.audio.pause()
+    } catch (e) {
+      log('pause for sleep failed', e)
+    }
+  }
+
+  private onWake = () => {
+    this.cancelWake?.()
+    this.cancelWake = afterStartupMovie(() => {
+      if (!this.pausedForSleep) return
+      this.pausedForSleep = false
+      const route = getRoute()
+      const stillWanted =
+        this.playingAppId !== undefined &&
+        this.state.getPublicState().gamesRunning.length === 0 &&
+        (isHoverRoute(route) || gamePageAppId(route) === this.playingAppId)
+      if (!stillWanted) {
+        this.stopNow()
+        return
+      }
+      resumeAudioContext()
+      // Start the song from the beginning after waking.
+      this.audio.currentTime = 0
+      this.audio.volume = 0
+      this.audio
+        .play()
+        .then(() => this.fadeTo(this.targetVolume, WAKE_FADE_MS))
+        .catch((e) => {
+          log('resume after sleep failed', e)
+          this.stopNow()
+        })
+    })
   }
 
   private onFocusIn = (e: FocusEvent) => {
@@ -213,6 +303,17 @@ export class HoverPlayer {
         appId === this.playingAppId &&
         isHoverRoute(getRoute())
       ) {
+        return
+      }
+      // Steam briefly highlighting a tab on the way back from the game page.
+      const graceLeft = this.returnGraceUntil - performance.now()
+      if (
+        appId === undefined &&
+        this.playingAppId !== undefined &&
+        graceLeft > 0
+      ) {
+        clearTimeout(this.graceTimer)
+        this.graceTimer = setTimeout(this.settleAfterReturn, graceLeft)
         return
       }
       // Every other focus change resets the timer and fades out what's playing.
@@ -271,6 +372,7 @@ export class HoverPlayer {
       // Volumes above 100% are applied by a gain node; the element volume
       // (0 to 1) is what we fade.
       const fadeTarget = setBoostedVolume(this.audio, volume)
+      this.targetVolume = fadeTarget
       this.audio.volume = 0
       await this.audio.play()
       if (generation !== this.generation) return
@@ -333,11 +435,14 @@ export class HoverPlayer {
 
   /** Cancel any pending highlight and fade out whatever is playing. */
   private stop() {
+    this.returnGraceUntil = 0
+    clearTimeout(this.graceTimer)
     this.generation++
     clearTimeout(this.delayTimer)
     this.delayTimer = undefined
     if (this.playingAppId === undefined) return
     this.playingAppId = undefined
+    this.pausedForSleep = false
     this.fadeTo(0, FADE_OUT_MS, () => {
       // Only pause if nothing new started during the fade.
       if (this.playingAppId === undefined) this.pauseAudio()
@@ -345,6 +450,9 @@ export class HoverPlayer {
   }
 
   private stopNow() {
+    this.pausedForSleep = false
+    this.returnGraceUntil = 0
+    clearTimeout(this.graceTimer)
     this.generation++
     clearTimeout(this.delayTimer)
     clearInterval(this.fadeTimer)
