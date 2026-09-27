@@ -14,8 +14,8 @@ export type Settings = {
 
 export const defaultSettings: Settings = {
   defaultMuted: false,
-  useYtDlp: false,
-  downloadAudio: false,
+  useYtDlp: true,
+  downloadAudio: true,
   invidiousInstance: 'https://inv.tux.pizza',
   volume: 1,
   playOnHighlight: false,

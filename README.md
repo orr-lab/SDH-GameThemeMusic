@@ -10,6 +10,7 @@ Modified from [ChrisMack32/SDH-GameThemeMusic](https://github.com/ChrisMack32/SD
 - **Per-game volume up to 200%** for quiet songs (applies to downloaded songs; streamed songs are capped at 100%).
 - **Delays**: a Highlight Delay (0–5 s) and a Game Page Delay (0–1 s, so music starts after Steam's page animation), both adjustable globally and per game in the game's Game Settings tab.
 - **yt-dlp fixes**: bundled yt-dlp updated to 2026.08.19 (the older one gets HTTP 403 from YouTube); yt-dlp's default YouTube clients are used; failures are checked and logged instead of being shown as "Selected"; video IDs starting with "-" work; the automatic search stops once a playable song is found.
+- **Use yt-dlp and Download Music are on by default** for new installs (existing settings are kept).
 - **Songs keep playing on later visits**: if a saved song can't be loaded, a fresh search result plays instead, and streamed songs are downloaded in the background (when Download Music is on).
 - `scripts/package_zip.py` builds an installable zip without Docker or the Decky CLI. The zip's top-level folder must stay `Game Theme Music`, because Decky names the plugin's data folder (where downloads live) after it.
 
@@ -25,7 +26,7 @@ You need [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader) on yo
    Press **Install** and confirm.
    You can also download the zip from the [Releases page](https://github.com/orr-lab/SDH-GameThemeMusic/releases), copy it to the Deck, and use **Install Plugin from ZIP File** instead.
 3. **Set it up**: open **Game Theme Music** in the Decky menu.
-   - Turn on **Use yt-dlp** and **Download Music**.
+   - **Use yt-dlp** and **Download Music** are on by default for new installs. If you're coming from the store version with them off, turn them on.
    - Turn on **Play on Highlight** if you want music while scrolling your library.
 
 If you already use Game Theme Music from the store, this replaces it. Your downloaded songs, song choices and settings carry over. To go back, uninstall it in Decky's settings (**Plugins** tab) and install Game Theme Music from the store again.
